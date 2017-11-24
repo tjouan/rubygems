@@ -100,7 +100,7 @@ Hoe::DEFAULT_CONFIG["exclude"] = %r[#{Hoe::DEFAULT_CONFIG["exclude"]}|\./bundler
 v = hoe.version
 
 hoe.testlib      = :minitest
-hoe.test_prelude = <<-RUBY.gsub("\n", ";")
+hoe.test_prelude = <<-RUBY.chomp.gsub("\n", ";")
   gem "minitest", "~> 4.0"
   $:.unshift #{File.expand_path("../bundler/lib", __FILE__).dump}
 RUBY
