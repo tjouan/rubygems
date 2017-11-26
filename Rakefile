@@ -197,18 +197,10 @@ file "pkg/rubygems-#{v}.tgz" => source_pkg_dir do
   end
 end
 
-file "pkg/rubygems-#{v}.zip" => source_pkg_dir do
-  cd 'pkg' do
-    sh "zip -q -r rubygems-#{v}.zip rubygems-#{v}"
-  end
-end
-
 file "pkg/rubygems-update-#{v}.gem"
 
 task :package => %W[
-       pkg/rubygems-update-#{v}.gem
        pkg/rubygems-#{v}.tgz
-       pkg/rubygems-#{v}.zip
      ]
 
 desc "Upload release to S3"
