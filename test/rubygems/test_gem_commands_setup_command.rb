@@ -118,12 +118,13 @@ class TestGemCommandsSetupCommand < Gem::TestCase
 
   def test_install_default_bundler_gem
     @cmd.extend FileUtils
+    _, _, specs_dir = @cmd.make_destination_dirs ''
 
-    @cmd.install_default_bundler_gem
+    @cmd.install_default_bundler_gem specs_dir
 
     if Gem.win_platform?
       bundler_spec = Gem::Specification.load("bundler/bundler.gemspec")
-      default_spec_path = File.join(Gem::Specification.default_specifications_dir, "#{bundler_spec.full_name}.gemspec")
+      default_spec_path = File.join(specs_dir, "#{bundler_spec.full_name}.gemspec")
       spec = Gem::Specification.load(default_spec_path)
 
       spec.executables.each do |e|
@@ -131,12 +132,10 @@ class TestGemCommandsSetupCommand < Gem::TestCase
       end
     end
 
-    default_dir = Gem::Specification.default_specifications_dir
-
-    refute_path_exists File.join(default_dir, "bundler-1.15.4.gemspec")
+    refute_path_exists File.join(specs_dir, "bundler-1.15.4.gemspec")
     refute_path_exists 'default/gems/bundler-1.15.4'
 
-    assert_path_exists File.join(default_dir, "bundler-1.16.0.gemspec")
+    assert_path_exists File.join(specs_dir, "bundler-1.16.0.gemspec")
     assert_path_exists 'default/gems/bundler-1.16.0'
 
     assert_path_exists File.join(Gem.default_dir, "specifications", "bundler-audit-1.0.0.gemspec")
@@ -148,12 +147,12 @@ class TestGemCommandsSetupCommand < Gem::TestCase
     destdir = File.join @tempdir, 'destdir'
     @cmd.options[:destdir] = destdir
     @cmd.extend FileUtils
+    _, _, specs_dir = @cmd.make_destination_dirs destdir
 
-    @cmd.install_default_bundler_gem
+    @cmd.install_default_bundler_gem specs_dir
 
-    specs_dir = File.join destdir,
-      Gem::Specification.default_specifications_dir
-    bin_dir = File.join destdir, Gem.default_dir, *%w[gems bundler-1.16.0 exe]
+    bin_dir = File.join destdir, Gem.default_dir.gsub(/^[a-zA-Z]:/, ''),
+      *%w[gems bundler-1.16.0 exe]
 
     assert_path_exists File.join(specs_dir, 'bundler-1.16.0.gemspec')
     assert_path_exists File.join(bin_dir, 'bundle')

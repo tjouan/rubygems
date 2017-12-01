@@ -138,7 +138,7 @@ By default, this RubyGems will install gem as:
       extend FileUtils
     end
 
-    lib_dir, bin_dir = make_destination_dirs install_destdir
+    lib_dir, bin_dir, specs_dir = make_destination_dirs install_destdir
 
     install_lib lib_dir
 
@@ -148,7 +148,7 @@ By default, this RubyGems will install gem as:
 
     remove_old_lib_files lib_dir
 
-    install_default_bundler_gem
+    install_default_bundler_gem specs_dir
 
     say "RubyGems #{Gem::VERSION} installed"
 
@@ -347,12 +347,8 @@ By default, this RubyGems will install gem as:
     return false
   end
 
-  def install_default_bundler_gem
+  def install_default_bundler_gem specs_dir
     return unless Gem::USE_BUNDLER_FOR_GEMDEPS
-
-    specs_dir = File.join options[:destdir],
-      Gem::Specification.default_specifications_dir
-    mkdir_p specs_dir
 
     # Workaround for non-git environment.
     gemspec = File.open('bundler/bundler.gemspec', 'rb'){|f| f.read.gsub(/`git ls-files -z`/, "''") }
@@ -377,10 +373,10 @@ By default, this RubyGems will install gem as:
         each {|default_gem| rm_r File.join(bundler_spec.gems_dir, default_gem) }
     end
 
-    bundler_bin_dir = File.join(
-      options[:destdir], Gem.default_dir, 'gems',
+    bundler_bin_dir = File.join([
+      options[:destdir], Gem.default_dir.gsub(/^[a-zA-Z]:/, ''), 'gems',
       bundler_spec.full_name, bundler_spec.bindir
-    )
+    ].reject &:empty?)
     mkdir_p bundler_bin_dir
     bundler_spec.executables.each do |e|
       cp File.join("bundler", bundler_spec.bindir, e),
@@ -392,7 +388,7 @@ By default, this RubyGems will install gem as:
 
       installer = Gem::Installer.for_spec bundler_spec
       bundler_spec.executables.each do |e|
-        installer.generate_windows_script e, bundler_spec.bin_dir
+        installer.generate_windows_script e, bundler_bin_dir
       end
     end
 
@@ -403,13 +399,14 @@ By default, this RubyGems will install gem as:
     lib_dir, bin_dir = Gem.default_rubygems_dirs
 
     unless lib_dir
-      lib_dir, bin_dir = generate_default_dirs(install_destdir)
+      lib_dir, bin_dir, specs_dir = generate_default_dirs(install_destdir)
     end
 
     mkdir_p lib_dir
     mkdir_p bin_dir
+    mkdir_p specs_dir
 
-    return lib_dir, bin_dir
+    return lib_dir, bin_dir, specs_dir
   end
 
   def generate_default_dirs(install_destdir)
@@ -436,12 +433,15 @@ By default, this RubyGems will install gem as:
       end
     end
 
+    specs_dir = Gem::Specification.default_specifications_dir
+
     unless install_destdir.empty? then
       lib_dir = File.join install_destdir, lib_dir.gsub(/^[a-zA-Z]:/, '')
       bin_dir = File.join install_destdir, bin_dir.gsub(/^[a-zA-Z]:/, '')
+      specs_dir = File.join install_destdir, specs_dir.gsub(/^[a-zA-Z]:/, '')
     end
 
-    [lib_dir, bin_dir]
+    [lib_dir, bin_dir, specs_dir]
   end
 
   def pem_files_in dir
