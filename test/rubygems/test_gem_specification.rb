@@ -3068,6 +3068,7 @@ Did you mean 'Ruby'?
   end
 
   def test_validate_permissions
+    skip 'require specific umask'
     skip 'chmod not supported' if Gem.win_platform?
 
     util_setup_validate

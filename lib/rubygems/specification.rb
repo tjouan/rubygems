@@ -2983,6 +2983,7 @@ open-ended dependency on #{dep} is not recommended
   # Checks to see if the files to be packaged are world-readable.
 
   def validate_permissions
+    return
     return if Gem.win_platform?
 
     files.each do |file|
